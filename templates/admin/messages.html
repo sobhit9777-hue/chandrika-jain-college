@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Messages{% endblock %}
+{% block content %}
+<section class="py-4 bg-light" style="min-height:85vh;"><div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold"><i class="fas fa-envelope me-2 text-danger"></i>Messages</h3>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Back</a>
+    </div>
+    {% for msg in messages %}
+    <div class="card border-0 shadow-sm rounded-4 mb-3 {{ '' if msg.is_read else 'border-start border-primary border-4' }}"><div class="card-body p-4">
+        <div class="d-flex justify-content-between"><div>
+            <h6 class="fw-bold">{% if not msg.is_read %}<i class="fas fa-circle text-primary me-1" style="font-size:8px;"></i>{% endif %}{{ msg.name }} - {{ msg.subject or 'No Subject' }}</h6>
+            <p class="text-muted mb-2">{{ msg.message }}</p>
+            <small class="text-muted"><i class="fas fa-envelope me-1"></i>{{ msg.email }}{% if msg.phone %} | {{ msg.phone }}{% endif %} | {{ msg.date.strftime('%d %b %Y') }}</small>
+        </div>
+        {% if not msg.is_read %}<a href="{{ url_for('mark_read', id=msg.id) }}" class="btn btn-outline-success btn-sm"><i class="fas fa-check"></i></a>{% else %}<span class="badge bg-success">Read</span>{% endif %}
+        </div>
+    </div></div>
+    {% endfor %}
+    {% if not messages %}<div class="text-center py-5"><h5 class="text-muted">No messages</h5></div>{% endif %}
+</div></section>
+{% endblock %}

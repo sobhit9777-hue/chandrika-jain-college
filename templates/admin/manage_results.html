@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Manage Results{% endblock %}
+{% block content %}
+<section class="py-4 bg-light" style="min-height:85vh;"><div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold"><i class="fas fa-poll me-2 text-success"></i>Manage Results</h3>
+        <div><a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary me-2"><i class="fas fa-arrow-left me-1"></i>Back</a><button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addResultModal"><i class="fas fa-plus me-1"></i>Upload</button></div>
+    </div>
+    <div class="modal fade" id="addResultModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content rounded-4">
+        <div class="modal-header bg-success text-white"><h5 class="modal-title">Upload Result</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <form method="POST" action="{{ url_for('add_result') }}"><div class="modal-body"><div class="row g-3">
+            <div class="col-md-8"><label class="form-label fw-bold">Title *</label><input type="text" name="title" class="form-control" required></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Exam Type</label><select name="exam_type" class="form-select"><option value="">Select</option><option>Annual</option><option>Semester</option><option>Internal</option><option>Supplementary</option></select></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Course</label><select name="course" class="form-select"><option value="">Select</option><option>BA</option><option>BSc</option><option>BCom</option></select></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Semester</label><input type="text" name="semester" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Year</label><input type="text" name="year" class="form-control" placeholder="2024"></div>
+            <div class="col-12"><label class="form-label fw-bold">Google Drive Link *</label><input type="url" name="drive_link" class="form-control" required></div>
+        </div></div>
+        <div class="modal-footer"><button type="submit" class="btn btn-success"><i class="fas fa-upload me-1"></i>Upload</button></div></form>
+    </div></div></div>
+    <div class="card border-0 shadow-sm rounded-4"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0">
+        <thead class="table-light"><tr><th>#</th><th>Title</th><th>Type</th><th>Course</th><th>Year</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody>{% for r in results %}<tr>
+            <td>{{ loop.index }}</td><td class="fw-bold">{{ r.title[:40] }}</td><td><span class="badge bg-primary">{{ r.exam_type or '-' }}</span></td>
+            <td>{{ r.course or '-' }}</td><td>{{ r.year or '-' }}</td><td><small>{{ r.upload_date.strftime('%d-%m-%Y') }}</small></td>
+            <td><a href="{{ r.drive_link }}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="fas fa-eye"></i></a>
+            {% if r.is_active %}<a href="{{ url_for('delete_result', id=r.id) }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete?')"><i class="fas fa-trash"></i></a>{% endif %}</td>
+        </tr>{% endfor %}</tbody>
+    </table></div>
+    {% if not results %}<div class="text-center py-5"><h5 class="text-muted">No results yet</h5></div>{% endif %}
+    </div></div>
+</div></section>
+{% endblock %}

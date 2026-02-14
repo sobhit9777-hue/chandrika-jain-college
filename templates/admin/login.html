@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Admin Login{% endblock %}
+{% block content %}
+<section class="py-5" style="min-height:70vh;background:linear-gradient(135deg,#667eea,#764ba2);">
+    <div class="container d-flex align-items-center justify-content-center" style="min-height:60vh;">
+        <div class="col-md-5 col-lg-4"><div class="card border-0 shadow-lg rounded-4"><div class="card-body p-5">
+            <div class="text-center mb-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:80px;height:80px;"><i class="fas fa-user-shield fa-2x text-primary"></i></div>
+                <h4 class="fw-bold">Admin Login</h4>
+                <p class="text-muted small">For Teachers & Administrators Only</p>
+            </div>
+            <form method="POST" action="{{ url_for('admin_login') }}">
+                <div class="mb-3"><label class="form-label fw-bold"><i class="fas fa-user me-1"></i>Username</label><input type="text" name="username" class="form-control form-control-lg" required autofocus></div>
+                <div class="mb-4"><label class="form-label fw-bold"><i class="fas fa-lock me-1"></i>Password</label><input type="password" name="password" class="form-control form-control-lg" required></div>
+                <button type="submit" class="btn btn-primary btn-lg w-100"><i class="fas fa-sign-in-alt me-2"></i>Login</button>
+            </form>
+            <div class="text-center mt-3"><a href="{{ url_for('index') }}" class="text-decoration-none"><i class="fas fa-arrow-left me-1"></i>Back to Home</a></div>
+        </div></div></div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Manage Courses{% endblock %}
+{% block content %}
+<section class="py-4 bg-light" style="min-height:85vh;"><div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold"><i class="fas fa-graduation-cap me-2"></i>Courses</h3>
+        <div><a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary me-2"><i class="fas fa-arrow-left me-1"></i>Back</a><button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#addCourseModal"><i class="fas fa-plus me-1"></i>Add</button></div>
+    </div>
+    <div class="modal fade" id="addCourseModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content rounded-4">
+        <div class="modal-header bg-dark text-white"><h5 class="modal-title">Add Course</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <form method="POST" action="{{ url_for('add_course') }}"><div class="modal-body"><div class="row g-3">
+            <div class="col-md-8"><label class="form-label fw-bold">Name *</label><input type="text" name="name" class="form-control" required></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Code</label><input type="text" name="code" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Duration</label><input type="text" name="duration" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Department</label><input type="text" name="department" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Seats</label><input type="number" name="seats" class="form-control"></div>
+            <div class="col-12"><label class="form-label fw-bold">Eligibility</label><input type="text" name="eligibility" class="form-control"></div>
+            <div class="col-12"><label class="form-label fw-bold">Description</label><textarea name="description" class="form-control" rows="3"></textarea></div>
+        </div></div><div class="modal-footer"><button type="submit" class="btn btn-dark"><i class="fas fa-save me-1"></i>Add</button></div></form>
+    </div></div></div>
+    <div class="row">{% for c in courses %}
+    <div class="col-md-6 mb-4"><div class="card border-0 shadow-sm rounded-4"><div class="card-body p-4">
+        <div class="d-flex justify-content-between"><h5 class="fw-bold">{{ c.name }}</h5><a href="{{ url_for('delete_course', id=c.id) }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Remove?')"><i class="fas fa-trash"></i></a></div>
+        <p class="text-muted">{{ c.description or 'No description' }}</p>
+        <span class="badge bg-primary me-1">{{ c.duration }}</span>{% if c.department %}<span class="badge bg-info me-1">{{ c.department }}</span>{% endif %}{% if c.seats %}<span class="badge bg-success">{{ c.seats }} Seats</span>{% endif %}
+    </div></div></div>
+    {% endfor %}</div>
+</div></section>
+{% endblock %}

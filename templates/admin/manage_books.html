@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Manage Books{% endblock %}
+{% block content %}
+<section class="py-4 bg-light" style="min-height:85vh;"><div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold"><i class="fas fa-book me-2 text-primary"></i>Manage Library</h3>
+        <div><a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary me-2"><i class="fas fa-arrow-left me-1"></i>Back</a><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBookModal"><i class="fas fa-plus me-1"></i>Add Book</button></div>
+    </div>
+    <div class="modal fade" id="addBookModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content rounded-4">
+        <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-plus me-2"></i>Add Book</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <form method="POST" action="{{ url_for('add_book') }}"><div class="modal-body"><div class="row g-3">
+            <div class="col-md-6"><label class="form-label fw-bold">Title *</label><input type="text" name="title" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Author *</label><input type="text" name="author" class="form-control" required></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Subject *</label><input type="text" name="subject" class="form-control" required></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Course</label><select name="course" class="form-select"><option value="">Select</option><option>BA</option><option>BSc</option><option>BCom</option><option>General</option></select></div>
+            <div class="col-md-4"><label class="form-label fw-bold">Semester</label><select name="semester" class="form-select"><option value="">Select</option>{% for i in range(1,7) %}<option value="{{ i }}">Sem {{ i }}</option>{% endfor %}</select></div>
+            <div class="col-12"><label class="form-label fw-bold">Google Drive Link *</label><input type="url" name="drive_link" class="form-control" required placeholder="https://drive.google.com/file/d/xxx/view"><small class="text-muted"><i class="fas fa-info-circle me-1"></i>Drive pe PDF upload → Share → Anyone with link → Copy link</small></div>
+            <div class="col-12"><label class="form-label fw-bold">Description</label><textarea name="description" class="form-control" rows="2"></textarea></div>
+        </div></div>
+        <div class="modal-footer"><button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Add</button></div></form>
+    </div></div></div>
+    <div class="card border-0 shadow-sm rounded-4"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0">
+        <thead class="table-light"><tr><th>#</th><th>Title</th><th>Author</th><th>Subject</th><th>Course</th><th>Sem</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody>{% for book in books %}<tr class="{{ 'table-secondary' if not book.is_active }}">
+            <td>{{ loop.index }}</td><td class="fw-bold">{{ book.title[:30] }}</td><td>{{ book.author }}</td>
+            <td><span class="badge bg-info">{{ book.subject }}</span></td><td>{{ book.course or '-' }}</td><td>{{ book.semester or '-' }}</td>
+            <td><small>{{ book.upload_date.strftime('%d-%m-%Y') }}</small></td>
+            <td><a href="{{ book.drive_link }}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="fas fa-eye"></i></a>
+            {% if book.is_active %}<a href="{{ url_for('delete_book', id=book.id) }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete?')"><i class="fas fa-trash"></i></a>{% endif %}</td>
+        </tr>{% endfor %}</tbody>
+    </table></div>
+    {% if not books %}<div class="text-center py-5"><i class="fas fa-book fa-3x text-muted mb-3"></i><h5 class="text-muted">No books yet</h5></div>{% endif %}
+    </div></div>
+</div></section>
+{% endblock %}
