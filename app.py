@@ -3,39 +3,35 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timedelta
+from functools import wraps
 import os
 
 # =================== APP SETUP ===================
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'chandrika-jain-college-2024-secret')
 
-# ✅ DATABASE - Supabase PostgreSQL (Permanent) or SQLite (Fallback)
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
-
 if DATABASE_URL:
     if DATABASE_URL.startswith('postgres://'):
         DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     STORAGE_TYPE = 'PostgreSQL (Permanent) ✅'
-    print("✅ Using Supabase PostgreSQL (PERMANENT)")
+    print("✅ Using Supabase PostgreSQL")
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/college.db'
     STORAGE_TYPE = 'SQLite (Temporary) ⚠️'
-    print("⚠️ Using SQLite (Set DATABASE_URL for permanent storage)")
+    print("⚠️ Using SQLite")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_pre_ping': True,
-    'pool_recycle': 300,
-}
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_pre_ping': True, 'pool_recycle': 300}
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'admin_login'
 
-# =================== DATABASE MODELS ===================
+# =================== MODELS ===================
 class Admin(UserMixin, db.Model):
     __tablename__ = 'admins'
     id = db.Column(db.Integer, primary_key=True)
@@ -131,6 +127,24 @@ class ContactMessage(db.Model):
     date = db.Column(db.DateTime, default=datetime.utcnow)
     is_read = db.Column(db.Boolean, default=False)
 
+# ✅ NEW - Visitor Tracking
+class Visitor(db.Model):
+    __tablename__ = 'visitors'
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(50))
+    page = db.Column(db.String(200))
+    user_agent = db.Column(db.String(500))
+    visit_date = db.Column(db.DateTime, default=datetime.utcnow)
+    date_only = db.Column(db.String(10))
+
+# ✅ NEW - Site Settings (Contact Info etc)
+class SiteSettings(db.Model):
+    __tablename__ = 'site_settings'
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(100), unique=True, nullable=False)
+    value = db.Column(db.Text, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 @login_manager.user_loader
 def load_user(user_id):
     try:
@@ -169,6 +183,55 @@ def convert_drive_image(link):
             return f'https://drive.google.com/uc?export=view&id={file_id}'
     return link
 
+# ✅ NEW - Get Site Setting
+def get_setting(key, default=''):
+    try:
+        setting = SiteSettings.query.filter_by(key=key).first()
+        return setting.value if setting else default
+    except:
+        return default
+
+# ✅ NEW - Set Site Setting
+def set_setting(key, value):
+    try:
+        setting = SiteSettings.query.filter_by(key=key).first()
+        if setting:
+            setting.value = value
+            setting.updated_at = datetime.utcnow()
+        else:
+            db.session.add(SiteSettings(key=key, value=value))
+        db.session.commit()
+    except:
+        db.session.rollback()
+
+# ✅ NEW - Track Visitor
+def track_visitor(page):
+    try:
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+        if ip:
+            ip = ip.split(',')[0].strip()
+        today = datetime.utcnow().strftime('%Y-%m-%d')
+        
+        # Check if same IP already visited today (avoid duplicate counting)
+        existing = Visitor.query.filter_by(
+            ip_address=ip, page=page, date_only=today
+        ).first()
+        
+        if not existing:
+            visitor = Visitor(
+                ip_address=ip,
+                page=page,
+                user_agent=str(request.user_agent)[:500],
+                date_only=today
+            )
+            db.session.add(visitor)
+            db.session.commit()
+    except:
+        try:
+            db.session.rollback()
+        except:
+            pass
+
 def init_db():
     with app.app_context():
         try:
@@ -176,16 +239,12 @@ def init_db():
             print("✅ Tables created!")
 
             if not Admin.query.filter_by(username='admin').first():
-                db.session.add(Admin(
-                    username='admin',
+                db.session.add(Admin(username='admin',
                     password_hash=generate_password_hash('admin123'),
-                    name='Principal - CJDM', role='admin'
-                ))
-                db.session.add(Admin(
-                    username='teacher1',
+                    name='Principal - CJDM', role='admin'))
+                db.session.add(Admin(username='teacher1',
                     password_hash=generate_password_hash('teacher123'),
-                    name='Sample Teacher', role='teacher'
-                ))
+                    name='Sample Teacher', role='teacher'))
 
                 for c in [
                     {'name': 'Bachelor of Arts (BA)', 'code': 'BA', 'duration': '3 Years',
@@ -203,30 +262,68 @@ def init_db():
                 ]:
                     db.session.add(Course(**c))
 
-                db.session.add(Notice(
-                    title='Welcome to Chandrika Jain Degree Mahavidyalaya!',
+                db.session.add(Notice(title='Welcome to Chandrika Jain Degree Mahavidyalaya!',
                     content='Official website launched. Access library, results, notices online.',
-                    category='General', is_important=True, posted_by='Admin'
-                ))
-                db.session.add(Notice(
-                    title='Digital Library Now Available',
+                    category='General', is_important=True, posted_by='Admin'))
+                db.session.add(Notice(title='Digital Library Now Available',
                     content='Free digital books and study materials for all students.',
-                    category='General', is_important=True, posted_by='Admin'
-                ))
+                    category='General', is_important=True, posted_by='Admin'))
+
+                # ✅ Default Contact Settings
+                default_settings = {
+                    'college_name': 'Chandrika Jain Degree Mahavidyalaya',
+                    'college_address': 'Borda, Kalahandi, Odisha',
+                    'college_phone': '+91-XXXXXXXXXX',
+                    'college_email': 'info@cjdmcollege.in',
+                    'college_website': 'https://cjdmcollege.in',
+                    'principal_name': 'Principal Name',
+                    'office_hours': 'Mon - Sat: 9:00 AM - 5:00 PM',
+                    'library_hours': 'Mon - Sat: 8:00 AM - 6:00 PM',
+                    'facebook_url': '',
+                    'twitter_url': '',
+                    'instagram_url': '',
+                    'youtube_url': '',
+                    'whatsapp_number': '',
+                    'google_map_embed': '',
+                    'admission_open': 'true',
+                    'admission_text': 'Admissions Open for 2024-25',
+                }
+                for key, value in default_settings.items():
+                    db.session.add(SiteSettings(key=key, value=value))
+
                 db.session.commit()
-                print("✅ Default data inserted!")
+                print("✅ Default data + settings inserted!")
             else:
-                print("✅ Database already initialized")
+                # Ensure settings exist even if admin exists
+                if not SiteSettings.query.first():
+                    default_settings = {
+                        'college_name': 'Chandrika Jain Degree Mahavidyalaya',
+                        'college_address': 'Borda, Kalahandi, Odisha',
+                        'college_phone': '+91-XXXXXXXXXX',
+                        'college_email': 'info@cjdmcollege.in',
+                        'college_website': 'https://cjdmcollege.in',
+                        'principal_name': 'Principal Name',
+                        'office_hours': 'Mon - Sat: 9:00 AM - 5:00 PM',
+                        'library_hours': 'Mon - Sat: 8:00 AM - 6:00 PM',
+                        'facebook_url': '', 'twitter_url': '',
+                        'instagram_url': '', 'youtube_url': '',
+                        'whatsapp_number': '', 'google_map_embed': '',
+                        'admission_open': 'true',
+                        'admission_text': 'Admissions Open for 2024-25',
+                    }
+                    for key, value in default_settings.items():
+                        db.session.add(SiteSettings(key=key, value=value))
+                    db.session.commit()
+                print("✅ Database ready")
         except Exception as e:
             print(f"❌ DB Error: {e}")
-            try:
-                db.session.rollback()
-            except:
-                pass
+            try: db.session.rollback()
+            except: pass
 
 # =================== PUBLIC ROUTES ===================
 @app.route('/')
 def index():
+    track_visitor('home')
     try:
         notices = Notice.query.filter_by(is_active=True).order_by(Notice.post_date.desc()).limit(5).all()
         courses = Course.query.filter_by(is_active=True).all()
@@ -237,27 +334,28 @@ def index():
 
 @app.route('/about')
 def about():
+    track_visitor('about')
     return render_template('about.html')
 
 @app.route('/courses')
 def courses():
-    try:
-        all_courses = Course.query.filter_by(is_active=True).all()
-    except:
-        all_courses = []
+    track_visitor('courses')
+    try: all_courses = Course.query.filter_by(is_active=True).all()
+    except: all_courses = []
     return render_template('courses.html', courses=all_courses)
 
 @app.route('/faculty')
 def faculty():
+    track_visitor('faculty')
     try:
         all_faculty = Faculty.query.filter_by(is_active=True).all()
         departments = [d[0] for d in db.session.query(Faculty.department).filter_by(is_active=True).distinct().all() if d[0]]
-    except:
-        all_faculty, departments = [], []
+    except: all_faculty, departments = [], []
     return render_template('faculty.html', faculty=all_faculty, departments=departments)
 
 @app.route('/library')
 def library():
+    track_visitor('library')
     try:
         subject = request.args.get('subject', '')
         course = request.args.get('course', '')
@@ -268,102 +366,82 @@ def library():
         if course: query = query.filter(Book.course.ilike(f'%{course}%'))
         if semester: query = query.filter_by(semester=semester)
         if search:
-            query = query.filter(db.or_(
-                Book.title.ilike(f'%{search}%'),
-                Book.author.ilike(f'%{search}%'),
-                Book.subject.ilike(f'%{search}%')
-            ))
+            query = query.filter(db.or_(Book.title.ilike(f'%{search}%'),
+                Book.author.ilike(f'%{search}%'), Book.subject.ilike(f'%{search}%')))
         books = query.order_by(Book.upload_date.desc()).all()
         subjects = [s[0] for s in db.session.query(Book.subject).filter_by(is_active=True).distinct().all() if s[0]]
         courses_list = [c[0] for c in db.session.query(Book.course).filter_by(is_active=True).distinct().all() if c[0]]
-    except:
-        books, subjects, courses_list = [], [], []
+    except: books, subjects, courses_list = [], [], []
     return render_template('library.html', books=books, subjects=subjects,
                          courses=courses_list, convert_drive_link=convert_drive_link)
 
 @app.route('/results')
 def results():
-    try:
-        all_results = Result.query.filter_by(is_active=True).order_by(Result.upload_date.desc()).all()
-    except:
-        all_results = []
+    track_visitor('results')
+    try: all_results = Result.query.filter_by(is_active=True).order_by(Result.upload_date.desc()).all()
+    except: all_results = []
     return render_template('results.html', results=all_results, convert_drive_link=convert_drive_link)
 
 @app.route('/gallery')
 def gallery():
+    track_visitor('gallery')
     try:
         category = request.args.get('category', '')
         query = Gallery.query.filter_by(is_active=True)
         if category: query = query.filter_by(category=category)
         images = query.order_by(Gallery.upload_date.desc()).all()
         categories = [c[0] for c in db.session.query(Gallery.category).filter_by(is_active=True).distinct().all() if c[0]]
-    except:
-        images, categories = [], []
+    except: images, categories = [], []
     return render_template('gallery.html', images=images, categories=categories)
 
 @app.route('/notices')
 def notices():
-    try:
-        all_notices = Notice.query.filter_by(is_active=True).order_by(Notice.post_date.desc()).all()
-    except:
-        all_notices = []
+    track_visitor('notices')
+    try: all_notices = Notice.query.filter_by(is_active=True).order_by(Notice.post_date.desc()).all()
+    except: all_notices = []
     return render_template('notices.html', notices=all_notices)
 
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
+    track_visitor('contact')
     if request.method == 'POST':
         try:
-            db.session.add(ContactMessage(
-                name=request.form['name'], email=request.form['email'],
-                phone=request.form.get('phone', ''), subject=request.form.get('subject', ''),
-                message=request.form['message']
-            ))
+            db.session.add(ContactMessage(name=request.form['name'], email=request.form['email'],
+                phone=request.form.get('phone',''), subject=request.form.get('subject',''),
+                message=request.form['message']))
             db.session.commit()
             flash('Message sent successfully!', 'success')
-        except:
-            db.session.rollback()
-            flash('Error sending message.', 'error')
+        except: db.session.rollback(); flash('Error!', 'error')
         return redirect(url_for('contact'))
     return render_template('contact.html')
 
 # =================== ADMIN ===================
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
-    if current_user.is_authenticated:
-        return redirect(url_for('admin_dashboard'))
+    if current_user.is_authenticated: return redirect(url_for('admin_dashboard'))
     if request.method == 'POST':
         try:
             user = Admin.query.filter_by(username=request.form['username']).first()
             if user and check_password_hash(user.password_hash, request.form['password']):
-                login_user(user)
-                flash(f'Welcome {user.name}!', 'success')
+                login_user(user); flash(f'Welcome {user.name}!', 'success')
                 return redirect(url_for('admin_dashboard'))
             flash('Invalid credentials!', 'error')
-        except:
-            flash('Login error!', 'error')
+        except: flash('Login error!', 'error')
     return render_template('admin/login.html')
 
 @app.route('/admin/logout')
 @login_required
 def admin_logout():
-    logout_user()
-    flash('Logged out!', 'success')
+    logout_user(); flash('Logged out!', 'success')
     return redirect(url_for('index'))
 
 @app.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
     try:
-        stats = {k: globals()[v[0]].query.filter_by(**v[1]).count() for k, v in {
-            'books': (Book, {'is_active': True}), 'results': (Result, {'is_active': True}),
-            'notices': (Notice, {'is_active': True}), 'faculty': (Faculty, {'is_active': True}),
-            'courses': (Course, {'is_active': True}), 'gallery': (Gallery, {'is_active': True}),
-        }.items()}
-        stats['messages'] = ContactMessage.query.filter_by(is_read=False).count()
-    except:
-        stats = {k: 0 for k in ['books','results','notices','faculty','courses','messages','gallery']}
-
-    try:
+        today = datetime.utcnow().strftime('%Y-%m-%d')
+        yesterday = (datetime.utcnow() - timedelta(days=1)).strftime('%Y-%m-%d')
+        
         stats = {
             'books': Book.query.filter_by(is_active=True).count(),
             'results': Result.query.filter_by(is_active=True).count(),
@@ -373,21 +451,132 @@ def admin_dashboard():
             'messages': ContactMessage.query.filter_by(is_read=False).count(),
             'gallery': Gallery.query.filter_by(is_active=True).count(),
         }
+        
+        # ✅ Traffic Stats
+        traffic = {
+            'today': Visitor.query.filter_by(date_only=today).count(),
+            'yesterday': Visitor.query.filter_by(date_only=yesterday).count(),
+            'total': Visitor.query.count(),
+            'this_week': Visitor.query.filter(
+                Visitor.visit_date >= datetime.utcnow() - timedelta(days=7)
+            ).count(),
+            'this_month': Visitor.query.filter(
+                Visitor.visit_date >= datetime.utcnow() - timedelta(days=30)
+            ).count(),
+        }
+        
+        # ✅ Page-wise traffic today
+        page_traffic = db.session.query(
+            Visitor.page, db.func.count(Visitor.id)
+        ).filter_by(date_only=today).group_by(Visitor.page).all()
+        
+        # ✅ Last 7 days traffic
+        daily_traffic = []
+        for i in range(6, -1, -1):
+            day = (datetime.utcnow() - timedelta(days=i)).strftime('%Y-%m-%d')
+            count = Visitor.query.filter_by(date_only=day).count()
+            daily_traffic.append({
+                'date': day,
+                'day': (datetime.utcnow() - timedelta(days=i)).strftime('%a'),
+                'count': count
+            })
+        
         recent_notices = Notice.query.order_by(Notice.post_date.desc()).limit(5).all()
         recent_messages = ContactMessage.query.order_by(ContactMessage.date.desc()).limit(5).all()
-    except:
+        
+    except Exception as e:
+        print(f"Dashboard error: {e}")
         stats = {k: 0 for k in ['books','results','notices','faculty','courses','messages','gallery']}
+        traffic = {'today': 0, 'yesterday': 0, 'total': 0, 'this_week': 0, 'this_month': 0}
+        page_traffic, daily_traffic = [], []
         recent_notices, recent_messages = [], []
 
-    return render_template('admin/dashboard.html', stats=stats,
+    return render_template('admin/dashboard.html', stats=stats, traffic=traffic,
+                         page_traffic=page_traffic, daily_traffic=daily_traffic,
                          recent_notices=recent_notices, recent_messages=recent_messages,
                          storage_type=STORAGE_TYPE)
 
+# ✅ NEW - Site Settings / Contact Info Edit
+@app.route('/admin/settings', methods=['GET', 'POST'])
+@login_required
+def admin_settings():
+    if request.method == 'POST':
+        try:
+            fields = ['college_name', 'college_address', 'college_phone', 'college_email',
+                      'college_website', 'principal_name', 'office_hours', 'library_hours',
+                      'facebook_url', 'twitter_url', 'instagram_url', 'youtube_url',
+                      'whatsapp_number', 'google_map_embed', 'admission_open', 'admission_text']
+            for field in fields:
+                value = request.form.get(field, '')
+                set_setting(field, value)
+            flash('✅ Settings updated!', 'success')
+        except Exception as e:
+            flash(f'Error: {e}', 'error')
+        return redirect(url_for('admin_settings'))
+    
+    # Get all settings
+    settings = {}
+    try:
+        all_settings = SiteSettings.query.all()
+        for s in all_settings:
+            settings[s.key] = s.value
+    except:
+        pass
+    
+    return render_template('admin/settings.html', settings=settings)
+
+# ✅ NEW - Traffic Analytics Page
+@app.route('/admin/analytics')
+@login_required
+def admin_analytics():
+    try:
+        today = datetime.utcnow().strftime('%Y-%m-%d')
+        
+        # Overall stats
+        traffic = {
+            'today': Visitor.query.filter_by(date_only=today).count(),
+            'total': Visitor.query.count(),
+            'this_week': Visitor.query.filter(
+                Visitor.visit_date >= datetime.utcnow() - timedelta(days=7)).count(),
+            'this_month': Visitor.query.filter(
+                Visitor.visit_date >= datetime.utcnow() - timedelta(days=30)).count(),
+            'unique_today': db.session.query(db.func.count(db.distinct(Visitor.ip_address))).filter_by(date_only=today).scalar(),
+            'unique_total': db.session.query(db.func.count(db.distinct(Visitor.ip_address))).scalar(),
+        }
+        
+        # Last 30 days daily traffic
+        daily_traffic = []
+        for i in range(29, -1, -1):
+            day = (datetime.utcnow() - timedelta(days=i)).strftime('%Y-%m-%d')
+            count = Visitor.query.filter_by(date_only=day).count()
+            daily_traffic.append({
+                'date': day,
+                'day': (datetime.utcnow() - timedelta(days=i)).strftime('%d %b'),
+                'count': count
+            })
+        
+        # Page-wise traffic (all time)
+        page_traffic = db.session.query(
+            Visitor.page, db.func.count(Visitor.id)
+        ).group_by(Visitor.page).order_by(db.func.count(Visitor.id).desc()).all()
+        
+        # Recent visitors
+        recent_visitors = Visitor.query.order_by(Visitor.visit_date.desc()).limit(50).all()
+        
+    except Exception as e:
+        print(f"Analytics error: {e}")
+        traffic = {'today':0,'total':0,'this_week':0,'this_month':0,'unique_today':0,'unique_total':0}
+        daily_traffic, page_traffic, recent_visitors = [], [], []
+    
+    return render_template('admin/analytics.html', traffic=traffic,
+                         daily_traffic=daily_traffic, page_traffic=page_traffic,
+                         recent_visitors=recent_visitors)
+
+# --- BOOKS ---
 @app.route('/admin/books')
 @login_required
 def manage_books():
-    books = Book.query.order_by(Book.upload_date.desc()).all() if True else []
-    return render_template('admin/manage_books.html', books=books)
+    return render_template('admin/manage_books.html', books=Book.query.order_by(Book.upload_date.desc()).all())
 
 @app.route('/admin/books/add', methods=['POST'])
 @login_required
@@ -398,38 +587,33 @@ def add_book():
                 course=request.form.get('course',''), drive_link=request.form['drive_link'],
                 description=request.form.get('description',''), uploaded_by=current_user.name)
         b.download_link = convert_drive_link(b.drive_link)['download']
-        db.session.add(b); db.session.commit()
-        flash('✅ Book added!', 'success')
-    except Exception as e:
-        db.session.rollback(); flash(f'Error: {e}', 'error')
+        db.session.add(b); db.session.commit(); flash('✅ Book added!', 'success')
+    except Exception as e: db.session.rollback(); flash(f'Error: {e}', 'error')
     return redirect(url_for('manage_books'))
 
 @app.route('/admin/books/delete/<int:id>')
 @login_required
 def delete_book(id):
-    try:
-        Book.query.get_or_404(id).is_active = False; db.session.commit()
-        flash('Removed!', 'success')
+    try: Book.query.get_or_404(id).is_active = False; db.session.commit(); flash('Removed!','success')
     except: db.session.rollback()
     return redirect(url_for('manage_books'))
 
+# --- RESULTS ---
 @app.route('/admin/results')
 @login_required
 def manage_results():
-    return render_template('admin/manage_results.html',
-                         results=Result.query.order_by(Result.upload_date.desc()).all())
+    return render_template('admin/manage_results.html', results=Result.query.order_by(Result.upload_date.desc()).all())
 
 @app.route('/admin/results/add', methods=['POST'])
 @login_required
 def add_result():
     try:
-        db.session.add(Result(title=request.form['title'],
-            exam_type=request.form.get('exam_type',''), course=request.form.get('course',''),
-            semester=request.form.get('semester',''), year=request.form.get('year',''),
-            drive_link=request.form['drive_link'], uploaded_by=current_user.name))
+        db.session.add(Result(title=request.form['title'], exam_type=request.form.get('exam_type',''),
+            course=request.form.get('course',''), semester=request.form.get('semester',''),
+            year=request.form.get('year',''), drive_link=request.form['drive_link'],
+            uploaded_by=current_user.name))
         db.session.commit(); flash('✅ Result uploaded!', 'success')
-    except Exception as e:
-        db.session.rollback(); flash(f'Error: {e}', 'error')
+    except Exception as e: db.session.rollback(); flash(f'Error: {e}', 'error')
     return redirect(url_for('manage_results'))
 
 @app.route('/admin/results/delete/<int:id>')
@@ -439,23 +623,21 @@ def delete_result(id):
     except: db.session.rollback()
     return redirect(url_for('manage_results'))
 
+# --- NOTICES ---
 @app.route('/admin/notices')
 @login_required
 def manage_notices():
-    return render_template('admin/manage_notices.html',
-                         notices=Notice.query.order_by(Notice.post_date.desc()).all())
+    return render_template('admin/manage_notices.html', notices=Notice.query.order_by(Notice.post_date.desc()).all())
 
 @app.route('/admin/notices/add', methods=['POST'])
 @login_required
 def add_notice():
     try:
         db.session.add(Notice(title=request.form['title'], content=request.form['content'],
-            category=request.form.get('category','General'),
-            attachment_link=request.form.get('attachment_link',''),
+            category=request.form.get('category','General'), attachment_link=request.form.get('attachment_link',''),
             is_important='is_important' in request.form, posted_by=current_user.name))
         db.session.commit(); flash('✅ Notice posted!', 'success')
-    except Exception as e:
-        db.session.rollback(); flash(f'Error: {e}', 'error')
+    except Exception as e: db.session.rollback(); flash(f'Error: {e}', 'error')
     return redirect(url_for('manage_notices'))
 
 @app.route('/admin/notices/delete/<int:id>')
@@ -465,27 +647,23 @@ def delete_notice(id):
     except: db.session.rollback()
     return redirect(url_for('manage_notices'))
 
+# --- FACULTY ---
 @app.route('/admin/faculty')
 @login_required
 def manage_faculty():
-    return render_template('admin/manage_faculty.html',
-                         faculty=Faculty.query.filter_by(is_active=True).all())
+    return render_template('admin/manage_faculty.html', faculty=Faculty.query.filter_by(is_active=True).all())
 
 @app.route('/admin/faculty/add', methods=['POST'])
 @login_required
 def add_faculty():
     try:
-        photo = convert_drive_image(request.form.get('photo_url',''))
-        db.session.add(Faculty(name=request.form['name'],
-            designation=request.form.get('designation',''),
-            department=request.form.get('department',''),
-            qualification=request.form.get('qualification',''),
+        db.session.add(Faculty(name=request.form['name'], designation=request.form.get('designation',''),
+            department=request.form.get('department',''), qualification=request.form.get('qualification',''),
             email=request.form.get('email',''), phone=request.form.get('phone',''),
-            photo_url=photo, experience=request.form.get('experience',''),
-            specialization=request.form.get('specialization','')))
+            photo_url=convert_drive_image(request.form.get('photo_url','')),
+            experience=request.form.get('experience',''), specialization=request.form.get('specialization','')))
         db.session.commit(); flash('✅ Faculty added!', 'success')
-    except Exception as e:
-        db.session.rollback(); flash(f'Error: {e}', 'error')
+    except Exception as e: db.session.rollback(); flash(f'Error: {e}', 'error')
     return redirect(url_for('manage_faculty'))
 
 @app.route('/admin/faculty/delete/<int:id>')
@@ -495,11 +673,12 @@ def delete_faculty(id):
     except: db.session.rollback()
     return redirect(url_for('manage_faculty'))
 
+# --- GALLERY ---
 @app.route('/admin/gallery')
 @login_required
 def manage_gallery():
     return render_template('admin/manage_gallery.html',
-                         images=Gallery.query.filter_by(is_active=True).order_by(Gallery.upload_date.desc()).all())
+        images=Gallery.query.filter_by(is_active=True).order_by(Gallery.upload_date.desc()).all())
 
 @app.route('/admin/gallery/add', methods=['POST'])
 @login_required
@@ -509,8 +688,7 @@ def add_gallery():
             image_url=convert_drive_image(request.form['image_url']),
             category=request.form.get('category','Campus')))
         db.session.commit(); flash('✅ Image added!', 'success')
-    except Exception as e:
-        db.session.rollback(); flash(f'Error: {e}', 'error')
+    except Exception as e: db.session.rollback(); flash(f'Error: {e}', 'error')
     return redirect(url_for('manage_gallery'))
 
 @app.route('/admin/gallery/delete/<int:id>')
@@ -520,11 +698,11 @@ def delete_gallery(id):
     except: db.session.rollback()
     return redirect(url_for('manage_gallery'))
 
+# --- COURSES ---
 @app.route('/admin/courses')
 @login_required
 def manage_courses():
-    return render_template('admin/manage_courses.html',
-                         courses=Course.query.filter_by(is_active=True).all())
+    return render_template('admin/manage_courses.html', courses=Course.query.filter_by(is_active=True).all())
 
 @app.route('/admin/courses/add', methods=['POST'])
 @login_required
@@ -536,8 +714,7 @@ def add_course():
             seats=int(request.form.get('seats',0)) if request.form.get('seats') else 0,
             department=request.form.get('department','')))
         db.session.commit(); flash('✅ Course added!', 'success')
-    except Exception as e:
-        db.session.rollback(); flash(f'Error: {e}', 'error')
+    except Exception as e: db.session.rollback(); flash(f'Error: {e}', 'error')
     return redirect(url_for('manage_courses'))
 
 @app.route('/admin/courses/delete/<int:id>')
@@ -547,11 +724,12 @@ def delete_course(id):
     except: db.session.rollback()
     return redirect(url_for('manage_courses'))
 
+# --- MESSAGES ---
 @app.route('/admin/messages')
 @login_required
 def admin_messages():
     return render_template('admin/messages.html',
-                         messages=ContactMessage.query.order_by(ContactMessage.date.desc()).all())
+        messages=ContactMessage.query.order_by(ContactMessage.date.desc()).all())
 
 @app.route('/admin/messages/read/<int:id>')
 @login_required
@@ -560,6 +738,7 @@ def mark_read(id):
     except: db.session.rollback()
     return redirect(url_for('admin_messages'))
 
+# --- USERS ---
 @app.route('/admin/users')
 @login_required
 def manage_users():
@@ -579,8 +758,7 @@ def add_user():
             password_hash=generate_password_hash(request.form['password']),
             name=request.form['name'], role=request.form.get('role','teacher')))
         db.session.commit(); flash('✅ User created!', 'success')
-    except Exception as e:
-        db.session.rollback(); flash(f'Error: {e}', 'error')
+    except Exception as e: db.session.rollback(); flash(f'Error: {e}', 'error')
     return redirect(url_for('manage_users'))
 
 @app.route('/admin/users/delete/<int:id>')
@@ -594,26 +772,30 @@ def delete_user(id):
     except: db.session.rollback()
     return redirect(url_for('manage_users'))
 
-# =================== CONTEXT & ERRORS ===================
+# =================== CONTEXT ===================
 @app.context_processor
 def utility_processor():
-    return {'now': datetime.utcnow, 'convert_drive_image': convert_drive_image}
+    settings = {}
+    try:
+        all_settings = SiteSettings.query.all()
+        for s in all_settings:
+            settings[s.key] = s.value
+    except:
+        pass
+    return {
+        'now': datetime.utcnow,
+        'convert_drive_image': convert_drive_image,
+        'site': settings,
+        'get_setting': get_setting
+    }
 
 @app.errorhandler(404)
-def not_found(e):
-    return redirect(url_for('index'))
-
+def not_found(e): return redirect(url_for('index'))
 @app.errorhandler(500)
-def server_error(e):
-    return redirect(url_for('index'))
+def server_error(e): return redirect(url_for('index'))
 
 # =================== RUN ===================
-print("\n" + "="*50)
-print("🎓 Chandrika Jain Degree Mahavidyalaya")
-print("📍 Borda, Kalahandi, Odisha")
-print(f"💾 Storage: {STORAGE_TYPE}")
-print("="*50 + "\n")
-
+print(f"\n{'='*50}\n🎓 Chandrika Jain Degree Mahavidyalaya\n📍 Borda, Kalahandi\n💾 {STORAGE_TYPE}\n{'='*50}\n")
 init_db()
 
 if __name__ == '__main__':
