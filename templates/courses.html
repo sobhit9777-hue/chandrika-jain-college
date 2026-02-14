@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Courses - CJDM{% endblock %}
+{% block content %}
+<section class="page-header py-5 text-center text-white" style="background:linear-gradient(135deg,#4a148c,#7b1fa2);"><div class="container"><h1 class="fw-bold display-5"><i class="fas fa-graduation-cap me-2"></i>Our Courses</h1></div></section>
+<section class="py-5"><div class="container">
+    {% if courses %}
+    <div class="row">{% for course in courses %}
+    <div class="col-lg-6 mb-4"><div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden">
+        <div class="card-header bg-primary text-white p-3"><h5 class="mb-0 fw-bold"><i class="fas fa-graduation-cap me-2"></i>{{ course.name }}</h5></div>
+        <div class="card-body p-4">
+            {% if course.code %}<p><strong><i class="fas fa-hashtag me-1 text-primary"></i>Code:</strong> {{ course.code }}</p>{% endif %}
+            <p><strong><i class="fas fa-clock me-1 text-success"></i>Duration:</strong> {{ course.duration }}</p>
+            {% if course.department %}<p><strong><i class="fas fa-building me-1 text-info"></i>Department:</strong> {{ course.department }}</p>{% endif %}
+            {% if course.seats %}<p><strong><i class="fas fa-chair me-1 text-warning"></i>Seats:</strong> {{ course.seats }}</p>{% endif %}
+            {% if course.eligibility %}<p><strong><i class="fas fa-check-circle me-1 text-success"></i>Eligibility:</strong> {{ course.eligibility }}</p>{% endif %}
+            {% if course.description %}<p class="text-muted mt-2">{{ course.description }}</p>{% endif %}
+        </div>
+    </div></div>
+    {% endfor %}</div>
+    {% else %}<div class="text-center py-5"><i class="fas fa-graduation-cap fa-4x text-muted mb-3"></i><h4 class="text-muted">Coming soon</h4></div>{% endif %}
+</div></section>
+{% endblock %}

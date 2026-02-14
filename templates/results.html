@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Results - CJDM{% endblock %}
+{% block content %}
+<section class="page-header py-5 text-center text-white" style="background:linear-gradient(135deg,#e65100,#bf360c);"><div class="container"><h1 class="fw-bold display-5"><i class="fas fa-poll me-2"></i>Exam Results</h1></div></section>
+<section class="py-5"><div class="container">
+    {% if results %}
+    <div class="row">{% for result in results %}
+    <div class="col-lg-4 col-md-6 mb-4"><div class="card border-0 shadow-sm h-100 rounded-4"><div class="card-body p-4">
+        <div class="d-flex align-items-center mb-3">
+            <div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width:50px;height:50px;"><i class="fas fa-file-alt fa-xl text-warning"></i></div>
+            <h6 class="fw-bold mb-0">{{ result.title }}</h6>
+        </div>
+        <div class="mb-3">
+            {% if result.exam_type %}<span class="badge bg-primary me-1">{{ result.exam_type }}</span>{% endif %}
+            {% if result.course %}<span class="badge bg-info me-1">{{ result.course }}</span>{% endif %}
+            {% if result.year %}<span class="badge bg-dark">{{ result.year }}</span>{% endif %}
+        </div>
+        <small class="text-muted d-block mb-3"><i class="fas fa-calendar me-1"></i>{{ result.upload_date.strftime('%d %b %Y') }}</small>
+        {% set links = convert_drive_link(result.drive_link) %}
+        <div class="d-flex gap-2">
+            <a href="{{ links.view }}" target="_blank" class="btn btn-primary btn-sm flex-fill"><i class="fas fa-eye me-1"></i>View</a>
+            <a href="{{ links.download }}" target="_blank" class="btn btn-success btn-sm flex-fill"><i class="fas fa-download me-1"></i>Download</a>
+        </div>
+    </div></div></div>
+    {% endfor %}</div>
+    {% else %}<div class="text-center py-5"><i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i><h4 class="text-muted">No results available yet</h4></div>{% endif %}
+</div></section>
+{% endblock %}

@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% block title %}Chandrika Jain Degree Mahavidyalaya - Home{% endblock %}
+{% block content %}
+<!-- Hero -->
+<section class="position-relative overflow-hidden" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:85vh;">
+    <div class="container d-flex align-items-center" style="min-height:85vh;">
+        <div class="row align-items-center w-100">
+            <div class="col-lg-7 text-white">
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill mb-3"><i class="fas fa-star me-1"></i>Affiliated to University</span>
+                <h1 class="display-3 fw-bold mb-3 hero-title">Chandrika Jain<br><span class="text-warning">Degree Mahavidyalaya</span></h1>
+                <h4 class="mb-3 fw-light opacity-75">Borda, Kalahandi, Odisha</h4>
+                <p class="lead mb-4 opacity-90">शिक्षा से समृद्धि - Empowering minds, Building futures.<br>Quality education for a brighter tomorrow.</p>
+                <div class="hero-buttons">
+                    <a href="{{ url_for('courses') }}" class="btn btn-warning btn-lg me-3 px-4 shadow"><i class="fas fa-graduation-cap me-2"></i>Explore Courses</a>
+                    <a href="{{ url_for('about') }}" class="btn btn-outline-light btn-lg px-4"><i class="fas fa-info-circle me-2"></i>Learn More</a>
+                </div>
+            </div>
+            <div class="col-lg-5 text-center d-none d-lg-block">
+                <div class="position-relative" style="height:400px;">
+                    <div class="floating-card card-1"><i class="fas fa-book-open fa-3x text-primary"></i><p class="mt-2 fw-bold mb-0">Library</p></div>
+                    <div class="floating-card card-2"><i class="fas fa-flask fa-3x text-success"></i><p class="mt-2 fw-bold mb-0">Science</p></div>
+                    <div class="floating-card card-3"><i class="fas fa-laptop-code fa-3x text-warning"></i><p class="mt-2 fw-bold mb-0">Digital</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-wave"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100"><path fill="#fff" d="M0,50 C150,100 350,0 500,50 C650,100 850,0 1000,50 C1150,100 1350,0 1440,50 L1440,100 L0,100 Z"></path></svg></div>
+</section>
+
+<!-- Stats -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-6 col-md-3 mb-4">
+                <div class="stat-card p-4 rounded-4 shadow-sm h-100">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:70px;height:70px;"><i class="fas fa-user-graduate fa-2x text-primary"></i></div>
+                    <h2 class="fw-bold text-primary">500+</h2><p class="text-muted mb-0">Students</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-4">
+                <div class="stat-card p-4 rounded-4 shadow-sm h-100">
+                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:70px;height:70px;"><i class="fas fa-chalkboard-teacher fa-2x text-success"></i></div>
+                    <h2 class="fw-bold text-success">25+</h2><p class="text-muted mb-0">Faculty</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-4">
+                <div class="stat-card p-4 rounded-4 shadow-sm h-100">
+                    <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:70px;height:70px;"><i class="fas fa-book fa-2x text-warning"></i></div>
+                    <h2 class="fw-bold text-warning">{{ courses|length }}+</h2><p class="text-muted mb-0">Courses</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-4">
+                <div class="stat-card p-4 rounded-4 shadow-sm h-100">
+                    <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:70px;height:70px;"><i class="fas fa-trophy fa-2x text-danger"></i></div>
+                    <h2 class="fw-bold text-danger">20+</h2><p class="text-muted mb-0">Years</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Notice Marquee -->
+{% if notices %}
+<section class="py-3 bg-warning">
+    <div class="container">
+        <div class="d-flex align-items-center">
+            <span class="badge bg-danger me-3 px-3 py-2"><i class="fas fa-bullhorn me-1"></i>NOTICES</span>
+            <marquee behavior="scroll" direction="left" scrollamount="5">
+                {% for notice in notices %}
+                <span class="me-5 fw-bold text-dark"><i class="fas fa-bell text-danger me-1"></i>{{ notice.title }} <small class="text-muted">({{ notice.post_date.strftime('%d-%m-%Y') }})</small> &nbsp;|&nbsp;</span>
+                {% endfor %}
+            </marquee>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Courses -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h6 class="text-primary text-uppercase fw-bold letter-spacing">Our Programs</h6>
+            <h2 class="fw-bold">Courses We Offer</h2>
+            <div class="title-underline mx-auto"></div>
+        </div>
+        <div class="row">
+            {% for course in courses[:6] %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card border-0 shadow-sm h-100 course-card rounded-4 overflow-hidden">
+                    <div class="card-body p-4">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;"><i class="fas fa-graduation-cap fa-xl text-primary"></i></div>
+                        <h5 class="fw-bold">{{ course.name }}</h5>
+                        <p class="text-muted mb-2"><i class="fas fa-clock me-1"></i>Duration: {{ course.duration }}</p>
+                        <p class="text-muted small">{{ course.description[:100] }}{% if course.description|length > 100 %}...{% endif %}</p>
+                        {% if course.seats %}<span class="badge bg-success"><i class="fas fa-chair me-1"></i>{{ course.seats }} Seats</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-3"><a href="{{ url_for('courses') }}" class="btn btn-primary px-4">View All Courses <i class="fas fa-arrow-right ms-1"></i></a></div>
+    </div>
+</section>
+
+<!-- Why Choose -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h6 class="text-primary text-uppercase fw-bold">Why Choose Us</h6>
+            <h2 class="fw-bold">Our Strengths</h2>
+            <div class="title-underline mx-auto"></div>
+        </div>
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="text-center p-4 rounded-4 feature-card h-100"><i class="fas fa-award fa-3x text-primary mb-3"></i><h5 class="fw-bold">Quality Education</h5><p class="text-muted">Experienced faculty providing best education</p></div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="text-center p-4 rounded-4 feature-card h-100"><i class="fas fa-book-reader fa-3x text-success mb-3"></i><h5 class="fw-bold">Digital Library</h5><p class="text-muted">Free access to digital books and materials</p></div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="text-center p-4 rounded-4 feature-card h-100"><i class="fas fa-users fa-3x text-warning mb-3"></i><h5 class="fw-bold">Supportive Environment</h5><p class="text-muted">Friendly campus with all facilities</p></div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="text-center p-4 rounded-4 feature-card h-100"><i class="fas fa-medal fa-3x text-danger mb-3"></i><h5 class="fw-bold">Excellent Results</h5><p class="text-muted">Outstanding academic performance</p></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Notices -->
+{% if notices %}
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5"><h6 class="text-primary text-uppercase fw-bold">Stay Updated</h6><h2 class="fw-bold">Latest Notices</h2><div class="title-underline mx-auto"></div></div>
+        <div class="row">
+            {% for notice in notices %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card border-0 shadow-sm h-100 rounded-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-{{ 'danger' if notice.is_important else 'primary' }}">{{ notice.category or 'General' }}</span>
+                            <small class="text-muted">{{ notice.post_date.strftime('%d %b %Y') }}</small>
+                        </div>
+                        <h6 class="fw-bold mt-2">{% if notice.is_important %}<i class="fas fa-exclamation-triangle text-danger me-1"></i>{% endif %}{{ notice.title }}</h6>
+                        <p class="text-muted small">{{ notice.content[:150] }}{% if notice.content|length > 150 %}...{% endif %}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center"><a href="{{ url_for('notices') }}" class="btn btn-outline-primary px-4">View All Notices <i class="fas fa-arrow-right ms-1"></i></a></div>
+    </div>
+</section>
+{% endif %}
+
+<!-- CTA -->
+<section class="py-5" style="background:linear-gradient(135deg,#667eea,#764ba2);">
+    <div class="container text-center text-white">
+        <h2 class="fw-bold mb-3">Ready to Start Your Journey?</h2>
+        <p class="lead mb-4 opacity-75">Join Chandrika Jain Degree Mahavidyalaya for a bright future</p>
+        <a href="{{ url_for('contact') }}" class="btn btn-warning btn-lg px-5 shadow"><i class="fas fa-paper-plane me-2"></i>Contact Us Today</a>
+    </div>
+</section>
+{% endblock %}

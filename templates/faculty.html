@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Faculty - CJDM{% endblock %}
+{% block content %}
+<section class="page-header py-5 text-center text-white" style="background:linear-gradient(135deg,#1b5e20,#2e7d32);"><div class="container"><h1 class="fw-bold display-5"><i class="fas fa-chalkboard-teacher me-2"></i>Our Faculty</h1></div></section>
+<section class="py-5"><div class="container">
+    {% if faculty %}
+    <div class="row">{% for f in faculty %}
+    <div class="col-lg-3 col-md-4 col-sm-6 mb-4"><div class="card border-0 shadow-sm h-100 rounded-4 text-center"><div class="card-body p-4">
+        {% if f.photo_url %}<img src="{{ f.photo_url }}" alt="{{ f.name }}" class="rounded-circle mb-3 shadow" style="width:100px;height:100px;object-fit:cover;">
+        {% else %}<div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:100px;height:100px;"><i class="fas fa-user fa-3x text-primary"></i></div>{% endif %}
+        <h6 class="fw-bold">{{ f.name }}</h6>
+        {% if f.designation %}<p class="text-primary small mb-1">{{ f.designation }}</p>{% endif %}
+        {% if f.department %}<span class="badge bg-secondary mb-2">{{ f.department }}</span>{% endif %}
+        {% if f.qualification %}<p class="text-muted small mb-1"><i class="fas fa-graduation-cap me-1"></i>{{ f.qualification }}</p>{% endif %}
+        {% if f.experience %}<p class="text-muted small"><i class="fas fa-briefcase me-1"></i>{{ f.experience }}</p>{% endif %}
+    </div></div></div>
+    {% endfor %}</div>
+    {% else %}<div class="text-center py-5"><i class="fas fa-users fa-4x text-muted mb-3"></i><h4 class="text-muted">Faculty info coming soon</h4></div>{% endif %}
+</div></section>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Gallery - CJDM{% endblock %}
+{% block content %}
+<section class="page-header py-5 text-center text-white" style="background:linear-gradient(135deg,#e91e63,#c2185b);"><div class="container"><h1 class="fw-bold display-5"><i class="fas fa-images me-2"></i>Gallery</h1></div></section>
+<section class="py-5"><div class="container">
+    {% if categories %}<div class="text-center mb-4"><a href="{{ url_for('gallery') }}" class="btn btn-outline-primary btn-sm me-2 mb-2">All</a>{% for cat in categories %}<a href="{{ url_for('gallery') }}?category={{ cat }}" class="btn btn-outline-primary btn-sm me-2 mb-2">{{ cat }}</a>{% endfor %}</div>{% endif %}
+    {% if images %}
+    <div class="row">{% for img in images %}
+    <div class="col-lg-3 col-md-4 col-sm-6 mb-4"><div class="card border-0 shadow-sm rounded-4 overflow-hidden gallery-card">
+        <img src="{{ img.image_url }}" alt="{{ img.title or 'Image' }}" class="card-img-top" style="height:200px;object-fit:cover;">
+        <div class="card-body p-3 text-center">{% if img.title %}<small class="fw-bold">{{ img.title }}</small>{% endif %}{% if img.category %}<br><span class="badge bg-primary mt-1">{{ img.category }}</span>{% endif %}</div>
+    </div></div>
+    {% endfor %}</div>
+    {% else %}<div class="text-center py-5"><i class="fas fa-images fa-4x text-muted mb-3"></i><h4 class="text-muted">No images yet</h4></div>{% endif %}
+</div></section>
+{% endblock %}

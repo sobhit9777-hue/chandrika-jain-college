@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Notices - CJDM{% endblock %}
+{% block content %}
+<section class="page-header py-5 text-center text-white" style="background:linear-gradient(135deg,#b71c1c,#c62828);"><div class="container"><h1 class="fw-bold display-5"><i class="fas fa-bullhorn me-2"></i>Notices</h1></div></section>
+<section class="py-5"><div class="container">
+    {% if notices %}
+    <div class="row">{% for notice in notices %}
+    <div class="col-md-6 mb-4"><div class="card border-0 shadow-sm h-100 rounded-4 {{ 'border-start border-danger border-4' if notice.is_important }}"><div class="card-body p-4">
+        <div class="d-flex justify-content-between mb-2">
+            <span class="badge bg-{{ 'danger' if notice.is_important else 'primary' }} rounded-pill px-3">{{ notice.category or 'General' }}</span>
+            <small class="text-muted"><i class="fas fa-calendar me-1"></i>{{ notice.post_date.strftime('%d %b %Y') }}</small>
+        </div>
+        <h5 class="fw-bold mt-2">{% if notice.is_important %}<i class="fas fa-exclamation-triangle text-danger me-1"></i>{% endif %}{{ notice.title }}</h5>
+        <p class="text-muted">{{ notice.content }}</p>
+        {% if notice.attachment_link %}<a href="{{ notice.attachment_link }}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="fas fa-paperclip me-1"></i>Attachment</a>{% endif %}
+    </div></div></div>
+    {% endfor %}</div>
+    {% else %}<div class="text-center py-5"><i class="fas fa-bell-slash fa-4x text-muted mb-3"></i><h4 class="text-muted">No notices</h4></div>{% endif %}
+</div></section>
+{% endblock %}

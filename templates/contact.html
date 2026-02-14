@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Contact - CJDM{% endblock %}
+{% block content %}
+<section class="page-header py-5 text-center text-white" style="background:linear-gradient(135deg,#0277bd,#01579b);"><div class="container"><h1 class="fw-bold display-5"><i class="fas fa-envelope me-2"></i>Contact Us</h1></div></section>
+<section class="py-5"><div class="container"><div class="row">
+    <div class="col-lg-5 mb-4">
+        <h4 class="fw-bold mb-4">Get In Touch</h4>
+        <div class="d-flex mb-3"><div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width:50px;height:50px;min-width:50px;"><i class="fas fa-map-marker-alt text-primary"></i></div><div><h6 class="fw-bold mb-1">Address</h6><p class="text-muted mb-0">Chandrika Jain Degree Mahavidyalaya,<br>Borda, Kalahandi, Odisha</p></div></div>
+        <div class="d-flex mb-3"><div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width:50px;height:50px;min-width:50px;"><i class="fas fa-phone text-success"></i></div><div><h6 class="fw-bold mb-1">Phone</h6><p class="text-muted mb-0">+91-XXXXXXXXXX</p></div></div>
+        <div class="d-flex mb-3"><div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width:50px;height:50px;min-width:50px;"><i class="fas fa-envelope text-warning"></i></div><div><h6 class="fw-bold mb-1">Email</h6><p class="text-muted mb-0">info@cjdmcollege.ac.in</p></div></div>
+        <div class="d-flex"><div class="bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width:50px;height:50px;min-width:50px;"><i class="fas fa-clock text-info"></i></div><div><h6 class="fw-bold mb-1">Hours</h6><p class="text-muted mb-0">Mon-Sat: 9AM-5PM</p></div></div>
+    </div>
+    <div class="col-lg-7"><div class="card border-0 shadow-sm rounded-4"><div class="card-body p-4">
+        <h4 class="fw-bold mb-4"><i class="fas fa-paper-plane me-2 text-primary"></i>Send Message</h4>
+        <form method="POST" action="{{ url_for('contact') }}">
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label fw-bold">Name *</label><input type="text" name="name" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label fw-bold">Email *</label><input type="email" name="email" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label fw-bold">Phone</label><input type="text" name="phone" class="form-control"></div>
+                <div class="col-md-6"><label class="form-label fw-bold">Subject</label><input type="text" name="subject" class="form-control"></div>
+                <div class="col-12"><label class="form-label fw-bold">Message *</label><textarea name="message" class="form-control" rows="5" required></textarea></div>
+                <div class="col-12"><button type="submit" class="btn btn-primary btn-lg w-100"><i class="fas fa-paper-plane me-2"></i>Send</button></div>
+            </div>
+        </form>
+    </div></div></div>
+</div></div></section>
+{% endblock %}
