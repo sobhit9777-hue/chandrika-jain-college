@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Chandrika Jain Degree Mahavidyalaya{% endblock %}</title>
+    <meta name="description" content="Chandrika Jain Degree Mahavidyalaya, Borda, Kalahandi, Odisha - Official Website. Courses, Library, Results, Notices.">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -23,6 +24,7 @@
         .hero-title{animation:fadeInUp 1s}
         .stat-card,.course-card,.book-card,.gallery-card{transition:.3s}
         .stat-card:hover,.course-card:hover,.book-card:hover,.gallery-card:hover{transform:translateY(-8px);box-shadow:0 15px 40px rgba(0,0,0,.12)!important}
+        .feature-card{transition:.3s}
         .feature-card:hover{background:#f8f9fa;transform:translateY(-5px)}
         .page-header{position:relative;overflow:hidden}
         .page-header::after{content:'';position:absolute;bottom:0;left:0;width:100%;height:30px;background:#fff;border-radius:30px 30px 0 0}
@@ -34,55 +36,346 @@
         .card{animation:fadeIn .5s}
         @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
         .letter-spacing{letter-spacing:3px}
-        ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:#f1f1f1}::-webkit-scrollbar-thumb{background:#667eea;border-radius:4px}
-        .footer-section a{transition:.3s}.footer-section a:hover{color:#ffc107!important}
+        ::-webkit-scrollbar{width:8px}
+        ::-webkit-scrollbar-track{background:#f1f1f1}
+        ::-webkit-scrollbar-thumb{background:#667eea;border-radius:4px}
+        .footer-section a{transition:.3s}
+        .footer-section a:hover{color:#ffc107!important;text-decoration:none}
+        .whatsapp-float{position:fixed;bottom:20px;right:20px;z-index:999;width:60px;height:60px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(37,211,102,.4);transition:.3s;text-decoration:none}
+        .whatsapp-float:hover{transform:scale(1.1);box-shadow:0 6px 20px rgba(37,211,102,.6)}
+        .admission-banner{background:linear-gradient(90deg,#ff6f00,#ff8f00);animation:pulse 2s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.85}}
         @media(max-width:768px){.hero-title{font-size:2rem!important}.floating-card{display:none}.hero-buttons .btn{display:block;width:100%;margin-bottom:10px}}
         @media(max-width:576px){.hero-title{font-size:1.6rem!important}.page-header h1{font-size:1.5rem!important}}
     </style>
 </head>
 <body>
+
+    <!-- ✅ Admission Banner (if open) -->
+    {% if site.get('admission_open') == 'true' and site.get('admission_text') %}
+    <div class="admission-banner text-center py-2">
+        <small class="text-white fw-bold">
+            <i class="fas fa-bullhorn me-1"></i> {{ site.get('admission_text', 'Admissions Open!') }}
+            <a href="{{ url_for('contact') }}" class="text-white ms-2"><u>Apply Now →</u></a>
+        </small>
+    </div>
+    {% endif %}
+
+    <!-- ✅ NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background:linear-gradient(135deg,#1a237e,#0d47a1)">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
-                <div class="college-logo-circle me-2"><i class="fas fa-university"></i></div>
-                <div><span class="fw-bold d-block" style="font-size:1.1rem;line-height:1.2">Chandrika Jain Degree</span><small style="font-size:.7rem;opacity:.9">Mahavidyalaya, Borda, Kalahandi</small></div>
+                <div class="college-logo-circle me-2">
+                    <i class="fas fa-university"></i>
+                </div>
+                <div>
+                    <span class="fw-bold d-block" style="font-size:1.1rem;line-height:1.2">
+                        {{ site.get('college_name', 'Chandrika Jain Degree')|truncate(25) }}
+                    </span>
+                    <small style="font-size:.7rem;opacity:.9">
+                        Mahavidyalaya, {{ site.get('college_address', 'Borda, Kalahandi')|truncate(30) }}
+                    </small>
+                </div>
             </a>
-            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
-            <div class="collapse navbar-collapse" id="nav">
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarMain">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}"><i class="fas fa-home me-1"></i>Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('about') }}"><i class="fas fa-info-circle me-1"></i>About</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('courses') }}"><i class="fas fa-graduation-cap me-1"></i>Courses</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('faculty') }}"><i class="fas fa-chalkboard-teacher me-1"></i>Faculty</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('library') }}"><i class="fas fa-book me-1"></i>Library</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('results') }}"><i class="fas fa-poll me-1"></i>Results</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('notices') }}"><i class="fas fa-bullhorn me-1"></i>Notices</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('gallery') }}"><i class="fas fa-images me-1"></i>Gallery</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('contact') }}"><i class="fas fa-envelope me-1"></i>Contact</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'index' }}" href="{{ url_for('index') }}">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'about' }}" href="{{ url_for('about') }}">
+                            <i class="fas fa-info-circle me-1"></i>About
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'courses' }}" href="{{ url_for('courses') }}">
+                            <i class="fas fa-graduation-cap me-1"></i>Courses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'faculty' }}" href="{{ url_for('faculty') }}">
+                            <i class="fas fa-chalkboard-teacher me-1"></i>Faculty
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'library' }}" href="{{ url_for('library') }}">
+                            <i class="fas fa-book me-1"></i>Library
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'results' }}" href="{{ url_for('results') }}">
+                            <i class="fas fa-poll me-1"></i>Results
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'notices' }}" href="{{ url_for('notices') }}">
+                            <i class="fas fa-bullhorn me-1"></i>Notices
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'gallery' }}" href="{{ url_for('gallery') }}">
+                            <i class="fas fa-images me-1"></i>Gallery
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'contact' }}" href="{{ url_for('contact') }}">
+                            <i class="fas fa-envelope me-1"></i>Contact
+                        </a>
+                    </li>
                     {% if current_user.is_authenticated %}
-                    <li class="nav-item"><a class="nav-link text-warning" href="{{ url_for('admin_dashboard') }}"><i class="fas fa-cog me-1"></i>Admin</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link text-warning" href="{{ url_for('admin_dashboard') }}">
+                            <i class="fas fa-cog me-1"></i>Admin
+                        </a>
+                    </li>
                     {% else %}
-                    <li class="nav-item"><a class="nav-link btn btn-outline-light btn-sm ms-2 px-3" href="{{ url_for('admin_login') }}"><i class="fas fa-sign-in-alt me-1"></i>Login</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-light btn-sm ms-2 px-3" href="{{ url_for('admin_login') }}">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </a>
+                    </li>
                     {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
-    {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="container mt-3">{% for cat, msg in messages %}<div class="alert alert-{{ 'success' if cat=='success' else 'danger' }} alert-dismissible fade show"><i class="fas fa-{{ 'check-circle' if cat=='success' else 'exclamation-circle' }} me-2"></i>{{ msg }}<button class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}</div>{% endif %}{% endwith %}
+
+    <!-- ✅ FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for cat, msg in messages %}
+        <div class="alert alert-{{ 'success' if cat == 'success' else 'danger' }} alert-dismissible fade show rounded-3" role="alert">
+            <i class="fas fa-{{ 'check-circle' if cat == 'success' else 'exclamation-circle' }} me-2"></i>
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- ✅ PAGE CONTENT -->
     {% block content %}{% endblock %}
+
+    <!-- ✅ FOOTER (Dynamic Contact Info) -->
     <footer class="footer-section mt-5">
         <div class="py-5" style="background:linear-gradient(135deg,#1a237e,#0d47a1)">
-            <div class="container"><div class="row">
-                <div class="col-lg-4 col-md-6 mb-4"><h5 class="text-white mb-3"><i class="fas fa-university me-2"></i>About College</h5><p class="text-white-50">Chandrika Jain Degree Mahavidyalaya, Borda, Kalahandi - Quality education for a brighter future.</p></div>
-                <div class="col-lg-2 col-md-6 mb-4"><h5 class="text-white mb-3">Links</h5><ul class="list-unstyled"><li class="mb-2"><a href="{{ url_for('about') }}" class="text-white-50 text-decoration-none">About</a></li><li class="mb-2"><a href="{{ url_for('courses') }}" class="text-white-50 text-decoration-none">Courses</a></li><li class="mb-2"><a href="{{ url_for('library') }}" class="text-white-50 text-decoration-none">Library</a></li><li class="mb-2"><a href="{{ url_for('contact') }}" class="text-white-50 text-decoration-none">Contact</a></li></ul></div>
-                <div class="col-lg-3 col-md-6 mb-4"><h5 class="text-white mb-3">Contact</h5><ul class="list-unstyled text-white-50"><li class="mb-2"><i class="fas fa-map-marker-alt me-2 text-warning"></i>Borda, Kalahandi, Odisha</li><li class="mb-2"><i class="fas fa-phone me-2 text-warning"></i>+91-XXXXXXXXXX</li><li class="mb-2"><i class="fas fa-envelope me-2 text-warning"></i>info@cjdmcollege.ac.in</li></ul></div>
-                <div class="col-lg-3 col-md-6 mb-4"><h5 class="text-white mb-3">Hours</h5><ul class="list-unstyled text-white-50"><li class="mb-2"><i class="fas fa-clock me-2 text-warning"></i>Mon-Sat: 9AM-5PM</li><li class="mb-2"><i class="fas fa-book-reader me-2 text-warning"></i>Library: 8AM-6PM</li></ul></div>
-            </div></div>
+            <div class="container">
+                <div class="row">
+
+                    <!-- Column 1: About College -->
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <h5 class="text-white mb-3">
+                            <i class="fas fa-university me-2"></i>
+                            {{ site.get('college_name', 'Chandrika Jain Degree Mahavidyalaya') }}
+                        </h5>
+                        <p class="text-white-50">
+                            {{ site.get('college_address', 'Borda, Kalahandi, Odisha') }} - 
+                            Quality education for a brighter future. Empowering minds, building careers.
+                        </p>
+                        {% if site.get('principal_name') %}
+                        <p class="text-white-50 mb-0">
+                            <i class="fas fa-user-tie me-1 text-warning"></i> 
+                            Principal: <strong class="text-white">{{ site.get('principal_name') }}</strong>
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Column 2: Quick Links -->
+                    <div class="col-lg-2 col-md-6 mb-4">
+                        <h5 class="text-white mb-3">Quick Links</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <a href="{{ url_for('about') }}" class="text-white-50 text-decoration-none">
+                                    <i class="fas fa-chevron-right me-1"></i>About
+                                </a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="{{ url_for('courses') }}" class="text-white-50 text-decoration-none">
+                                    <i class="fas fa-chevron-right me-1"></i>Courses
+                                </a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="{{ url_for('library') }}" class="text-white-50 text-decoration-none">
+                                    <i class="fas fa-chevron-right me-1"></i>Library
+                                </a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="{{ url_for('results') }}" class="text-white-50 text-decoration-none">
+                                    <i class="fas fa-chevron-right me-1"></i>Results
+                                </a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="{{ url_for('notices') }}" class="text-white-50 text-decoration-none">
+                                    <i class="fas fa-chevron-right me-1"></i>Notices
+                                </a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="{{ url_for('contact') }}" class="text-white-50 text-decoration-none">
+                                    <i class="fas fa-chevron-right me-1"></i>Contact
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Column 3: Contact Info (Dynamic) -->
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <h5 class="text-white mb-3">Contact Us</h5>
+                        <ul class="list-unstyled text-white-50">
+                            <li class="mb-2">
+                                <i class="fas fa-map-marker-alt me-2 text-warning"></i>
+                                {{ site.get('college_address', 'Borda, Kalahandi, Odisha') }}
+                            </li>
+                            <li class="mb-2">
+                                <a href="tel:{{ site.get('college_phone', '') }}" class="text-white-50 text-decoration-none">
+                                    <i class="fas fa-phone me-2 text-warning"></i>
+                                    {{ site.get('college_phone', '+91-XXXXXXXXXX') }}
+                                </a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="mailto:{{ site.get('college_email', '') }}" class="text-white-50 text-decoration-none">
+                                    <i class="fas fa-envelope me-2 text-warning"></i>
+                                    {{ site.get('college_email', 'info@cjdmcollege.in') }}
+                                </a>
+                            </li>
+                            {% if site.get('college_website') %}
+                            <li class="mb-2">
+                                <a href="{{ site.get('college_website') }}" class="text-white-50 text-decoration-none">
+                                    <i class="fas fa-globe me-2 text-warning"></i>
+                                    {{ site.get('college_website', 'cjdmcollege.in') }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+
+                        <!-- WhatsApp Button -->
+                        {% if site.get('whatsapp_number') %}
+                        <a href="https://wa.me/{{ site.get('whatsapp_number') }}" target="_blank" 
+                           class="btn btn-success btn-sm mt-2">
+                            <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <!-- Column 4: Hours & Social Media (Dynamic) -->
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <h5 class="text-white mb-3">Campus Hours</h5>
+                        <ul class="list-unstyled text-white-50">
+                            <li class="mb-2">
+                                <i class="fas fa-clock me-2 text-warning"></i>
+                                {{ site.get('office_hours', 'Mon-Sat: 9:00 AM - 5:00 PM') }}
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-book-reader me-2 text-warning"></i>
+                                Library: {{ site.get('library_hours', '8:00 AM - 6:00 PM') }}
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-calendar-times me-2 text-warning"></i>
+                                Sunday: Closed
+                            </li>
+                        </ul>
+
+                        <!-- Social Media Links (Dynamic) -->
+                        <h6 class="text-white mt-3 mb-2">Follow Us</h6>
+                        <div class="d-flex gap-3">
+                            {% if site.get('facebook_url') %}
+                            <a href="{{ site.get('facebook_url') }}" target="_blank" class="text-white" title="Facebook">
+                                <i class="fab fa-facebook-f fa-lg"></i>
+                            </a>
+                            {% endif %}
+
+                            {% if site.get('instagram_url') %}
+                            <a href="{{ site.get('instagram_url') }}" target="_blank" class="text-white" title="Instagram">
+                                <i class="fab fa-instagram fa-lg"></i>
+                            </a>
+                            {% endif %}
+
+                            {% if site.get('twitter_url') %}
+                            <a href="{{ site.get('twitter_url') }}" target="_blank" class="text-white" title="Twitter">
+                                <i class="fab fa-twitter fa-lg"></i>
+                            </a>
+                            {% endif %}
+
+                            {% if site.get('youtube_url') %}
+                            <a href="{{ site.get('youtube_url') }}" target="_blank" class="text-white" title="YouTube">
+                                <i class="fab fa-youtube fa-lg"></i>
+                            </a>
+                            {% endif %}
+
+                            {% if site.get('whatsapp_number') %}
+                            <a href="https://wa.me/{{ site.get('whatsapp_number') }}" target="_blank" class="text-white" title="WhatsApp">
+                                <i class="fab fa-whatsapp fa-lg"></i>
+                            </a>
+                            {% endif %}
+
+                            {% if not site.get('facebook_url') and not site.get('instagram_url') and not site.get('twitter_url') and not site.get('youtube_url') %}
+                            <span class="text-white-50"><small>Social links coming soon</small></span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
-        <div class="py-3 text-center" style="background:#0a1447"><p class="text-white-50 mb-0">&copy; 2024 CJDM College. All Rights Reserved.</p></div>
+
+        <!-- Bottom Bar -->
+        <div class="py-3 text-center" style="background:#0a1447">
+            <div class="container">
+                <p class="text-white-50 mb-0">
+                    &copy; 2024 {{ site.get('college_name', 'Chandrika Jain Degree Mahavidyalaya') }}, 
+                    {{ site.get('college_address', 'Borda, Kalahandi') }}. All Rights Reserved.
+                    <br>
+                    <small>Designed with <i class="fas fa-heart text-danger"></i> for Education</small>
+                </p>
+            </div>
+        </div>
     </footer>
+
+    <!-- ✅ WhatsApp Floating Button -->
+    {% if site.get('whatsapp_number') %}
+    <a href="https://wa.me/{{ site.get('whatsapp_number') }}?text=Hello! I want to know about admission in {{ site.get('college_name', 'CJDM College') }}" 
+       target="_blank" class="whatsapp-float" title="Chat on WhatsApp">
+        <i class="fab fa-whatsapp fa-2x text-white"></i>
+    </a>
+    {% endif %}
+
+    <!-- ✅ Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.alert').forEach(a=>{setTimeout(()=>{try{new bootstrap.Alert(a).close()}catch(e){}},5000)})})</script>
+    <script>
+        // Auto dismiss alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.alert').forEach(function(alert) {
+                setTimeout(function() {
+                    try {
+                        var bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    } catch(e) {}
+                }, 5000);
+            });
+        });
+
+        // Navbar scroll shadow effect
+        window.addEventListener('scroll', function() {
+            var navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
+            } else {
+                navbar.style.boxShadow = 'none';
+            }
+        });
+
+        // Active nav link highlight
+        document.querySelectorAll('.nav-link.active').forEach(function(link) {
+            link.style.background = 'rgba(255,255,255,0.15)';
+        });
+    </script>
+
     {% block scripts %}{% endblock %}
 </body>
 </html>
