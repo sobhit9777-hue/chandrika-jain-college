@@ -4,7 +4,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime, timedelta
-from functools import wraps
 import os
 
 # =================== APP SETUP ===================
@@ -13,8 +12,14 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'chandrika-jain-college-
 
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
 if DATABASE_URL:
+    # Fix postgres:// to postgresql://
     if DATABASE_URL.startswith('postgres://'):
         DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+    
+    # Use psycopg3 driver (works with Python 3.14)
+    if '+psycopg' not in DATABASE_URL:
+        DATABASE_URL = DATABASE_URL.replace('postgresql://', 'postgresql+psycopg://', 1)
+    
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     STORAGE_TYPE = 'PostgreSQL (Permanent) ✅'
     print("✅ Using Supabase PostgreSQL")
@@ -24,7 +29,10 @@ else:
     print("⚠️ Using SQLite")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_pre_ping': True, 'pool_recycle': 300}
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 300,
+}
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
